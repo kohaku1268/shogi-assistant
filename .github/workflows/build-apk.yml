@@ -31,9 +31,11 @@ jobs:
             gradle wrapper --gradle-version 8.2
           fi
           chmod +x gradlew
+          echo "android.useAndroidX=true" >> gradle.properties
+          echo "android.enableJetifier=true" >> gradle.properties
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug -Pandroid.useAndroidX=true --stacktrace
 
       - name: Upload APK to Artifacts
         uses: actions/upload-artifact@v4
