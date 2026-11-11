@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>将棋AI検討＆音声アシスタント</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header class="app-header">
+    <div class="app-title">
+      <span>☗</span> 将棋AI検討アシスタント
+    </div>
+    <div class="header-actions">
+      <button id="btn-settings" class="icon-btn" title="設定">⚙️ 設定</button>
+    </div>
+  </header>
+
+  <!-- 評価値バー -->
+  <div class="eval-bar-container">
+    <div class="eval-bar-track">
+      <div id="eval-bar-fill" class="eval-bar-fill"></div>
+    </div>
+    <div class="eval-info-row">
+      <span id="turn-indicator" class="turn-badge sente-active">手番: ▲先手</span>
+      <span id="eval-score-text">先手評価値: +0 (50%)</span>
+    </div>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <main class="main-content">
+    <!-- 将棋盤セクション -->
+    <section class="shogi-section">
+      <!-- 後手 駒台 -->
+      <div class="hand-area">
+        <span class="hand-label">▽後手 持駒:</span>
+        <div id="gote-hand" class="hand-pieces"></div>
+      </div>
+
+      <!-- 9x9 盤面 -->
+      <div class="board-wrapper">
+        <div id="shogi-board" class="shogi-board"></div>
+      </div>
+
+      <!-- 先手 駒台 -->
+      <div class="hand-area">
+        <span class="hand-label">▲先手 持駒:</span>
+        <div id="sente-hand" class="hand-pieces"></div>
+      </div>
+
+      <!-- コントロールボタン -->
+      <div class="board-controls">
+        <button id="btn-undo" class="control-btn">◀ 1手戻る</button>
+        <button id="btn-redo" class="control-btn">1手進む ▶</button>
+        <button id="btn-reset" class="control-btn">初期局面</button>
+        <button id="btn-hint" class="control-btn primary">💡 次の一手</button>
+      </div>
+
+      <!-- AI候補手一覧 -->
+      <div class="top-moves-panel">
+        <div class="top-moves-header">🔍 AI検討 候補手一覧 (タップで盤面表示):</div>
+        <div id="top-moves-list" class="top-moves-list"></div>
+      </div>
+    </section>
+
+    <!-- 対話＆音声アシスタントセクション -->
+    <section class="assistant-section">
+      <div class="assistant-header">
+        <span>🎙️</span> 音声AI対話アシスタント
+      </div>
+
+      <!-- チャットタイムライン -->
+      <div id="chat-messages" class="chat-messages"></div>
+
+      <!-- クイック質問チップ -->
+      <div class="quick-queries">
+        <button class="quick-chip" data-query="次の一手を教えて">💡 次の一手は？</button>
+        <button class="quick-chip" data-query="現在の形勢を教えて">📊 形勢はどう？</button>
+        <button class="quick-chip" data-query="攻める手はある？">⚔️ 攻めの一手</button>
+        <button class="quick-chip" data-query="守る手はある？">🛡️ 守りの手</button>
+        <button class="quick-chip" data-query="他の候補手を教えて">📋 他の選択肢</button>
+      </div>
+
+      <!-- 音声マイク＆テキスト入力エリア -->
+      <div class="input-area">
+        <div class="mic-action-box">
+          <button id="mic-btn" class="mic-btn" title="話しかける">🎤</button>
+          <div id="mic-status" class="mic-status">タップして話しかける</div>
+        </div>
+        <div class="text-input-row">
+          <input type="text" id="user-text-input" placeholder="質問を入力（例: 次の一手は？）">
+          <button id="send-text-btn" class="send-btn">送信</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 非表示の棋譜ログ（履歴保持用） -->
+  <ol id="kifu-history" style="display: none;"></ol>
+
+  <!-- 成り選択モーダル -->
+  <div id="promote-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>成りますか？</h3>
+      <p>敵陣への侵入または敵陣からの脱出です。成ることができます。</p>
+      <div class="modal-actions">
+        <button id="promote-yes-btn" class="btn-yes">成る</button>
+        <button id="promote-no-btn" class="btn-no">成らない (不成)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 設定モーダル -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>⚙️ 設定</h3>
+      <div class="setting-item">
+        <label for="gemini-api-key-input">Gemini APIキー (任意: より高度な自然対話解説):</label>
+        <input type="password" id="gemini-api-key-input" placeholder="AIzaSy...">
+        <small style="color: #888;">※空欄の場合でも内蔵AIエンジンが完全にオフラインで高速動作します。</small>
+      </div>
+      <div class="setting-item" style="flex-direction: row; align-items: center; justify-content: space-between;">
+        <label for="tts-toggle">音声読み上げ (TTS)</label>
+        <input type="checkbox" id="tts-toggle" checked style="width: 20px; height: 20px;">
+      </div>
+      <div class="modal-actions">
+        <button id="close-settings" class="btn-yes">保存して閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- スクリプト読み込み -->
+  <script src="js/shogi_rules.js"></script>
+  <script src="js/shogi_ai.js"></script>
+  <script src="js/voice_assistant.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
